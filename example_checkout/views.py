@@ -13,7 +13,7 @@ import locale
 import gocardless_pro
 
 # Set locale and GoCardless client connection.
-locale.setlocale(locale.LC_ALL, 'en_GB')
+locale.setlocale(locale.LC_ALL, 'en_GB.utf8')
 
 client = gocardless_pro.Client(
 	access_token='sandbox_IyUsW0Qqwu77LMDNaujtZHEiq4TvvuEslzbk0gWF',
