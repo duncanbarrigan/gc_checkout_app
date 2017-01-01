@@ -286,26 +286,26 @@ def create_subscription(mandate):
 #### WEBHOOK HANDLING ####
 ##########################
 
-# @csrf_exempt
-# def webhook_receiver(request):
-# 	return HttpResponse(200)
+@csrf_exempt
+def webhook_receiver(request):
+	return HttpResponse(200)
 
-class Webhook(View):
-	@method_decorator(csrf_exempt)
-	def dispatch(self, *args, **kwargs):
-		return super(Webhook, self).dispatch(*args, **kwargs)
+# class Webhook(View):
+# 	@method_decorator(csrf_exempt)
+# 	def dispatch(self, *args, **kwargs):
+# 		return super(Webhook, self).dispatch(*args, **kwargs)
 
-	def is_valid_signature(self, request):
-		secret = 'jUBeqqlm_fHoHRZk7ecrgEjsfl5Y5ZOTwUcUAvys'
-		computed_signature = hmac.new(
-			secret, request.body, hashlib.sha256).hexdigest()
-		provided_signature = request.META["HTTP_WEBHOOK_SIGNATURE"]
-		return hmac.compare_digest(provided_signature, computed_signature)
+# 	def is_valid_signature(self, request):
+# 		secret = 'jUBeqqlm_fHoHRZk7ecrgEjsfl5Y5ZOTwUcUAvys'
+# 		computed_signature = hmac.new(
+# 			secret, request.body, hashlib.sha256).hexdigest()
+# 		provided_signature = request.META["HTTP_WEBHOOK_SIGNATURE"]
+# 		return hmac.compare_digest(provided_signature, computed_signature)
 
-	def webhook_receiver(request):
-	# def webhook_receiver(self, request, *args, **kwargs):
-		# if is_valid_signature(request):
-		# 	return HttpResponse(200)
-		# else:
-		# 	return HttpResponse(498)
-		return HttpResponse(200)
+# 	def old_webhook_receiver(request):
+# 	# def webhook_receiver(self, request, *args, **kwargs):
+# 		# if is_valid_signature(request):
+# 		# 	return HttpResponse(200)
+# 		# else:
+# 		# 	return HttpResponse(498)
+# 		return HttpResponse(200)
