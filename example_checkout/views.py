@@ -2,7 +2,9 @@ from django.shortcuts import render, HttpResponse, redirect
 from django.http import HttpResponseNotFound
 from django.template import loader, RequestContext
 from django.contrib import messages
+from django.views.generic import View
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 from .forms import CustomerForm
 from .models import Customer, BankAccount, Mandate, Payment, Subscription, CustomerDataInput, CustomerOrder
@@ -11,6 +13,12 @@ import requests
 import locale
 
 import gocardless_pro
+
+# Webhook handling
+import json
+import hmac
+import hashlib
+import os
 
 # Set locale and GoCardless client connection.
 # locale.setlocale(locale.LC_ALL, 'en_GB.utf8')
@@ -278,6 +286,24 @@ def create_subscription(mandate):
 #### WEBHOOK HANDLING ####
 ##########################
 
-@csrf_exempt
-def webhook_receiver(request):
-	return HttpResponse('pong')
+# @csrf_exempt
+# def webhook_receiver(request):
+# 	return HttpResponse('pong')
+
+class Webhook(View):
+	@method_decorator(csrf_exempt)
+	def dispatch(self, *args, **kwargs):
+		return super(Webhook, self).dispatch(*args, **kwargs)
+
+	def is_valid_signature(self, request):
+		secret = 'jUBeqqlm_fHoHRZk7ecrgEjsfl5Y5ZOTwUcUAvys'
+		computed_signature = hmac.new(
+			secret, request.body, hashlib.sha256).hexdigest()
+		provided_signature = request.META["HTTP_WEBHOOK_SIGNATURE"]
+		return hmac.compare_digest(provided_signature, computed_signature)
+
+	def webhook_receiver(self, requeest, *args, **kwargs):
+		if is_valid_signature(request):
+			return HttpResponse(200)
+		else:
+			return HttpResponse(498)
