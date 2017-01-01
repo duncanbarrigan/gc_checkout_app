@@ -13,7 +13,7 @@ import locale
 import gocardless_pro
 
 # Set locale and GoCardless client connection.
-locale.setlocale(locale.LC_ALL, 'en_GB.utf8')
+# locale.setlocale(locale.LC_ALL, 'en_GB.utf8')
 
 client = gocardless_pro.Client(
 	access_token='sandbox_IyUsW0Qqwu77LMDNaujtZHEiq4TvvuEslzbk0gWF',
@@ -279,5 +279,5 @@ def create_subscription(mandate):
 ##########################
 
 @csrf_exempt
-def hello(request):
+def webhook_receiver(request):
 	return HttpResponse('pong')
