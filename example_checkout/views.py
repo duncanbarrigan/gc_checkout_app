@@ -302,7 +302,7 @@ class Webhook(View):
 		provided_signature = request.META["HTTP_WEBHOOK_SIGNATURE"]
 		return hmac.compare_digest(provided_signature, computed_signature)
 
-	def webhook_receiver(self, requeest, *args, **kwargs):
+	def webhook_receiver(self, request, *args, **kwargs):
 		if is_valid_signature(request):
 			return HttpResponse(200)
 		else:
