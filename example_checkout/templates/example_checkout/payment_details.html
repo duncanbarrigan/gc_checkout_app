@@ -1,0 +1,53 @@
+{% load humanize %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+{% include './head.html' %}
+
+<body>
+
+{% include './navbar.html' %}
+
+<header>
+	<h1 class="text-center">Payment Details</h1>
+</header>
+
+<div class="col-lg-12">
+	<div class="container text-center">
+	    <form id="login_form" method="post" action="{% url 'payment_details' %}">
+	      {% csrf_token %}
+
+	      <br>
+	      <input type="text" name="ID" class="form-control" placeholder="Payment ID, PM0002GNHAR9ZR" value="" required autofocus>
+	      <br>
+	      <button class="btn btn-lg btn-primary btn-block btn-spaced" type="submit">Get Data</button>
+	    </form>
+	</div>
+	<div class="table-responsive">
+		<table class="table table-bordered table-hover table-striped tablesorted">
+			<thead>
+				<tr>
+					<th class="header">ID <i class="icon-sort"></i></th>
+					<th class="header">Amount <i class="icon-sort"></i></th>
+					<th class="header">Charge date <i class="icon-sort"></i></th>
+					<th class="header">Created at <i class="icon-sort"></i></th>
+					<th class="header">Currency <i class="icon-sort"></i></th>
+					<th class="header">Status <i class="icon-sort"></i></th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td>{{ payments.id }}</td>
+					<td>{{ payments.amount|intcomma }}</td>
+					<td>{{ payments.charge_date }}</td>
+					<td>{{ payments.created_at }}</td>
+					<td>{{ payments.currency }}</td>
+					<td>{{ payments.status }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+</div>
+</body>
+</html>

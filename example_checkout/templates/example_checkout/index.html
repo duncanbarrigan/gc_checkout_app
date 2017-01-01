@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    {% include './head.html' %}
+
+<body id="page-top">
+
+    {% include './navbar.html' %}
+
+<div class="container-fluid text-center">
+
+    <div class="row">
+    	<header>
+	        <div class="page-header">
+	            <h1>GoCardless Checkout</h1>
+	            <h2>A demo for GoCardless</h2>
+	        </div>
+    	</header>
+    </div>
+
+    <section id="packages">
+	<div class="row">
+		<div class="col-xs-8 col-xs-offset-2 col-sm-3 col-sm-offset-2 bg-primary feature-box">
+			<h3>Subscription</h3>
+			<p>£50 per month</p>
+	      	<a class="btn btn-lg btn-block btn-green" href="{% url 'checkout_subscription' %}">Purchase</a>
+		</div>
+		<div class="col-xs-8 col-xs-offset-2 col-sm-3 col-sm-offset-2 bg-primary feature-box">
+			<h3>One-off</h3>
+			<p>£500 one-off</p>
+	      	<a class="btn btn-lg btn-block btn-green" href="{% url 'checkout_one_off' %}">Purchase</a>
+		</div>
+	</div>
+    </section>
+
+</div>
+
+</body>
+
+</html>
