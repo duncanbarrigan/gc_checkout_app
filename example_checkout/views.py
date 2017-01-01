@@ -286,9 +286,9 @@ def create_subscription(mandate):
 #### WEBHOOK HANDLING ####
 ##########################
 
-# @csrf_exempt
-# def webhook_receiver(request):
-# 	return HttpResponse('pong')
+@csrf_exempt
+def webhook_receiver(request):
+	return HttpResponse(200)
 
 class Webhook(View):
 	@method_decorator(csrf_exempt)
@@ -302,7 +302,7 @@ class Webhook(View):
 		provided_signature = request.META["HTTP_WEBHOOK_SIGNATURE"]
 		return hmac.compare_digest(provided_signature, computed_signature)
 
-	def webhook_receiver(self, request, *args, **kwargs):
+	def other_webhook_receiver(self, request, *args, **kwargs):
 		if is_valid_signature(request):
 			return HttpResponse(200)
 		else:
