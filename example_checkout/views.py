@@ -355,7 +355,21 @@ class Webhook(View):
 
 	def process_payments(self, event, response):
 		if event['action'] == 'created':
-			response.write("New payment {} has been created\n.".format(event['links']['payment']))
+			try:
+				payment = client.payments.get(str(event['links']['payment']))
+				payment_record = Payment(
+					id=payment.id,
+					amount=payment.amount,
+					charge_date=payment.charge_date,
+					currency=payment.currency,
+					reference=payment.reference,
+					status=payment.status,
+					linked_mandate=Mandate.objects.get(pk=payment.links.mandate),
+				)
+				payment_record.save()
+				response.write("New payment {} has been created\n.".format(event['links']['payment']))
+			except:
+				response.write("Failed to create new payment record for {}\n".format(event['links']['payment']))
 		else:
 			try:
 				payment_id = str(event['links']['payment'])
