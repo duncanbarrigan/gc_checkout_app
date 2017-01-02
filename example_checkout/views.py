@@ -320,26 +320,30 @@ class Webhook(View):
 
 	def process_mandates(self, event, response):
 		try:
-			mandate_record = Mandate.objects.get(pk=event['links']['mandate'])
-			mandate_record.status = event['status']
+			mandate_id = str(event['links']['mandate'])
+			mandate_record = Mandate.objects.get(pk=mandate_id)
+			mandate_record.status = event['action']
 			mandate_record.save()
+
 			# Expected mandate path
 			if event['action'] == 'submitted':
-				response.write("Mandate {} has been activated\n".format(event['links']['mandate']))		
+				response.write("Mandate {} has been activated\n".format(event['links']['mandate']))
 			elif event['action'] == 'active':
 				response.write("Mandate {} has been activated\n".format(event['links']['mandate']))
+			
 			# Mandate events triggered by banks
 			elif event['action'] == 'failed':
-				response.write("Mandate {} has failed\n".format(event['links']['mandate']))		
+				response.write("Mandate {} has failed\n".format(event['links']['mandate']))
 			elif event['action'] == 'expired':
 				response.write("Mandate {} has expired\n".format(event['links']['mandate']))
+			
 			# Mandate events triggered by customer actions
 			elif event['action'] == 'cancelled':
 				response.write("Mandate {} has been cancelled\n".format(event['links']['mandate']))
 			elif event['action'] == 'transferred': # Customer uses the bank account change process
 				response.write("Mandate {} has been transferred\n".format(event['links']['mandate']))
 			elif event['action'] == 'amended':
-				response.write("Mandate {} has been amended\n".format(event['links']['mandate']))			
+				response.write("Mandate {} has been amended\n".format(event['links']['mandate']))		
 			else:
 				response.write("Don't know how to process an event with resource_type {}\n".format(event['resource_type']))
 				return response
