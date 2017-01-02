@@ -293,6 +293,7 @@ class Webhook(View):
 		return super(Webhook, self).dispatch(*args, **kwargs)
 
 	def is_valid_signature(self, request):
+		# Checks secret on webhook matches the one provided by GoCardless.
 		secret = bytes('jUBeqqlm_fHoHRZk7ecrgEjsfl5Y5ZOTwUcUAvys', 'utf-8')
 		computed_signature = hmac.new(
 			secret, request.body, hashlib.sha256).hexdigest()
@@ -317,17 +318,34 @@ class Webhook(View):
 		if event['resource_type'] == 'payments':
 			return self.process_payments(event, response)
 		else:
+			# Not currently handling subscription, payout or refund webhooks.
 			response.write("Don't know how to process an event with resource_type {}\n".format(event['resource_type']))
 			return response
 
 	def process_mandates(self, event, response):
+		if event['action'] == 'created':
+			try:
+				# When a mandate has been created outside the app. Won't work unless the customer bank account
+				# is already present in the database.
+				# TODO: handle changes in customer bank accounts (triggers new CBA and mandate)
+				mandate = client.mandates.get(str(event['links']['mandate']))
+				mandate_record = Mandate(
+					id=mandate.id,
+					scheme=mandate.scheme,
+					status=mandate.status,
+					linked_bank_account=BankAccount.objects.get(pk=customer_bank_account.id),
+					)
+				mandate_record.save()
+				response.write("New mandate {} has been created\n".format(event['links']['mandate']))
+			except:
+				response.write("Failed to create new mandate record for {}\n".format(event['links']['mandate']))
 		try:
 			mandate_id = str(event['links']['mandate'])
 			mandate_record = Mandate.objects.get(pk=mandate_id)
 			mandate_record.status = event['action']
 			mandate_record.save()
 
-			# Expected mandate path
+			# Expected mandate path. Additional actions not required.
 			if event['action'] == 'submitted':
 				response.write("Mandate {} has been submitted\n".format(event['links']['mandate']))
 			elif event['action'] == 'active':
@@ -335,27 +353,42 @@ class Webhook(View):
 			
 			# Mandate events triggered by banks
 			elif event['action'] == 'failed':
+				# TODO: Trigger an email to support when this happens, or one directly to the customer
+				# to tell them that the mandate failed and they should try again.
+				# Best to look at ['details']['cause'] and provide the explanation.
 				response.write("Mandate {} has failed\n".format(event['links']['mandate']))
 			elif event['action'] == 'expired':
+				# Mandates expire if they are not used. 
+				# TODO: Trigger an email to the customer or support.
 				response.write("Mandate {} has expired\n".format(event['links']['mandate']))
 			
 			# Mandate events triggered by customer actions
 			elif event['action'] == 'cancelled':
+				# Depending on the ['details']['cause'] this could be due to the customer cancelling the mandate.
+				# This is usually intentional customer payment churn.
+				# TODO: Trigger marketing email to the customer.
 				response.write("Mandate {} has been cancelled\n".format(event['links']['mandate']))
-			elif event['action'] == 'transferred': # Customer uses the bank account change process
+			elif event['action'] == 'transferred': 
+				# Customer uses a bank account transfer process to move DDs to a new account.
+				# TODO: Update Customer Bank Account when this happens.
 				response.write("Mandate {} has been transferred\n".format(event['links']['mandate']))
 			elif event['action'] == 'amended':
+				# Customer has amended the name of the bank account holder
+				# TODO amend account holder name in database.
 				response.write("Mandate {} has been amended\n".format(event['links']['mandate']))		
 			else:
 				response.write("Don't know how to process an event with resource_type {}\n".format(event['resource_type']))
 				return response
 		except:
+			# Ignoring mandate events relating to restricted mandates as these are not used by this app.
 			response.write("Failed to find resource for {} in system\n".format(event['id']))
 			return response
 
 	def process_payments(self, event, response):
 		if event['action'] == 'created':
 			try:
+				# Payments are created outside the app by subscriptions.
+				# To keep payments up-to-day they must be created here.
 				payment = client.payments.get(str(event['links']['payment']))
 				payment_record = Payment(
 					id=payment.id,
@@ -369,6 +402,7 @@ class Webhook(View):
 				payment_record.save()
 				response.write("New payment {} has been created\n.".format(event['links']['payment']))
 			except:
+				# If a new customer is created outside the app then webhooks for new payments will fail to process.
 				response.write("Failed to create new payment record for {}\n".format(event['links']['payment']))
 		else:
 			try:
@@ -383,24 +417,30 @@ class Webhook(View):
 				elif event['action'] == 'confirmed':
 					response.write("Payment {} has been activated\n".format(event['links']['payment']))
 				elif event['action'] == 'paid_out':
+					# TODO: Build balances functionality and trigger it here.
 					response.write("Payment {} has been paid out\n".format(event['links']['payment']))
 
 				# Payment failure path
 				elif event['action'] == 'cancelled':
 					response.write("Payment {} has been cancelled\n".format(event['links']['payment']))				
 				elif event['action'] == 'failed':
+					# TODO: Trigger payment retry here. Customer is automatically emailed by GoCardless.
 					response.write("Payment {} has failed\n".format(event['links']['payment']))
 				elif event['action'] == 'late_failure_settled':
+					# TODO: Add trigger to balances reconciliation here.
 					response.write("Late failure on payment {} has been settled\n".format(event['links']['payment']))
 
 				# Payment chargeback path
 				elif event['action'] == 'charged_back':
+					# Could insert custom handling of chargebacks here.
 					response.write("Payment {} has been charged back\n".format(event['links']['payment']))
 				elif event['action'] == 'chargeback_cancelled':
 					response.write("Chargeback on payment {} has been cancelled\n".format(event['links']['payment']))
 				elif event['action'] == 'chargeback_settled':
+					# TODO: Add trigger to balances reconciliation here.
 					response.write("Chargeback on payment {} has been settled\n".format(event['links']['payment']))
 
 			except:
+				# Ignoring various events about payments requiring approval (shouldn't happen as not used by app)
 				response.write("Failed to find resource for {} in system\n".format(event['id']))
 				return response
