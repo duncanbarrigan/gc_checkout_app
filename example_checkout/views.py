@@ -289,10 +289,6 @@ def create_subscription(mandate):
 
 class Webhook(View):
 	@method_decorator(csrf_exempt)
-
-	def get(self, request, *args, **kwargs):
-		return HttpResponse('Available')
-
 	def dispatch(self, *args, **kwargs):
 		return super(Webhook, self).dispatch(*args, **kwargs)
 
@@ -308,3 +304,6 @@ class Webhook(View):
 			return HttpResponse(200)
 		else:
 			return HttpResponse(498)
+
+	def get(self, request, *args, **kwargs):
+		return HttpResponse('Available')
