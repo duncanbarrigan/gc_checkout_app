@@ -314,6 +314,8 @@ class Webhook(View):
 		response.write("Processing event {}\n".format(event['id']))
 		if event['resource_type'] == 'mandates':
 			return self.process_mandates(event, response)
+		if event['resource_type'] == 'payments':
+			return self.process_payments(event, response)
 		else:
 			response.write("Don't know how to process an event with resource_type {}\n".format(event['resource_type']))
 			return response
@@ -327,7 +329,7 @@ class Webhook(View):
 
 			# Expected mandate path
 			if event['action'] == 'submitted':
-				response.write("Mandate {} has been activated\n".format(event['links']['mandate']))
+				response.write("Mandate {} has been submitted\n".format(event['links']['mandate']))
 			elif event['action'] == 'active':
 				response.write("Mandate {} has been activated\n".format(event['links']['mandate']))
 			
@@ -350,3 +352,41 @@ class Webhook(View):
 		except:
 			response.write("Failed to find resource for {} in system\n".format(event['id']))
 			return response
+
+	def process_payments(self, event, response):
+		if event['action'] == 'created':
+			response.write("New payment {} has been created\n.".format(event['links']['payment']))
+		else:
+			try:
+				payment_id = str(event['links']['payment'])
+				payment_record = Payment.objects.get(pk=payment_id)
+				payment_record.status = event['action']
+				payment_record.save()
+
+				# Expected payment path
+				if event['action'] == 'submitted':
+					response.write("Payment {} has been submitted\n".format(event['links']['payment']))
+				elif event['action'] == 'confirmed':
+					response.write("Payment {} has been activated\n".format(event['links']['payment']))
+				elif event['action'] == 'paid_out':
+					response.write("Payment {} has been paid out\n".format(event['links']['payment']))
+
+				# Payment failure path
+				elif event['action'] == 'cancelled':
+					response.write("Payment {} has been cancelled\n".format(event['links']['payment']))				
+				elif event['action'] == 'failed':
+					response.write("Payment {} has failed\n".format(event['links']['payment']))
+				elif event['action'] == 'late_failure_settled':
+					response.write("Late failure on payment {} has been settled\n".format(event['links']['payment']))
+
+				# Payment chargeback path
+				elif event['action'] == 'charged_back':
+					response.write("Payment {} has been charged back\n".format(event['links']['payment']))
+				elif event['action'] == 'chargeback_cancelled':
+					response.write("Chargeback on payment {} has been cancelled\n".format(event['links']['payment']))
+				elif event['action'] == 'chargeback_settled':
+					response.write("Chargeback on payment {} has been settled\n".format(event['links']['payment']))
+
+			except:
+				response.write("Failed to find resource for {} in system\n".format(event['id']))
+				return response
