@@ -343,6 +343,6 @@ class Webhook(View):
 			else:
 				response.write("Don't know how to process an event with resource_type {}\n".format(event['resource_type']))
 				return response
-		else:
+		except:
 			response.write("Failed to find resource for {} in system\n".format(event['id']))
 			return response
