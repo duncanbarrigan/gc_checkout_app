@@ -319,26 +319,30 @@ class Webhook(View):
 			return response
 
 	def process_mandates(self, event, response):
-		mandate_record = Mandate.objects.get(pk=event['links']['mandate'])
-		mandate_record.status = event['status']
-		mandate_record.save()
-		# Expected mandate path
-		if event['action'] == 'submitted':
-			response.write("Mandate {} has been activated\n".format(event['links']['mandate']))		
-		elif event['action'] == 'active':
-			response.write("Mandate {} has been activated\n".format(event['links']['mandate']))
-		# Mandate events triggered by banks
-		elif event['action'] == 'failed':
-			response.write("Mandate {} has failed\n".format(event['links']['mandate']))		
-		elif event['action'] == 'expired':
-			response.write("Mandate {} has expired\n".format(event['links']['mandate']))
-		# Mandate events triggered by customer actions
-		elif event['action'] == 'cancelled':
-			response.write("Mandate {} has been cancelled\n".format(event['links']['mandate']))
-		elif event['action'] == 'transferred': # Customer uses the bank account change process
-			response.write("Mandate {} has been transferred\n".format(event['links']['mandate']))
-		elif event['action'] == 'amended':
-			response.write("Mandate {} has been amended\n".format(event['links']['mandate']))			
+		try:
+			mandate_record = Mandate.objects.get(pk=event['links']['mandate'])
+			mandate_record.status = event['status']
+			mandate_record.save()
+			# Expected mandate path
+			if event['action'] == 'submitted':
+				response.write("Mandate {} has been activated\n".format(event['links']['mandate']))		
+			elif event['action'] == 'active':
+				response.write("Mandate {} has been activated\n".format(event['links']['mandate']))
+			# Mandate events triggered by banks
+			elif event['action'] == 'failed':
+				response.write("Mandate {} has failed\n".format(event['links']['mandate']))		
+			elif event['action'] == 'expired':
+				response.write("Mandate {} has expired\n".format(event['links']['mandate']))
+			# Mandate events triggered by customer actions
+			elif event['action'] == 'cancelled':
+				response.write("Mandate {} has been cancelled\n".format(event['links']['mandate']))
+			elif event['action'] == 'transferred': # Customer uses the bank account change process
+				response.write("Mandate {} has been transferred\n".format(event['links']['mandate']))
+			elif event['action'] == 'amended':
+				response.write("Mandate {} has been amended\n".format(event['links']['mandate']))			
+			else:
+				response.write("Don't know how to process an event with resource_type {}\n".format(event['resource_type']))
+				return response
 		else:
-			response.write("Don't know how to process an event with resource_type {}\n".format(event['resource_type']))
+			response.write("Failed to find resource for {} in system\n".format(event['id']))
 			return response
