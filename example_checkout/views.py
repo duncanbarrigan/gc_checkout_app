@@ -301,9 +301,29 @@ class Webhook(View):
 
 	def post(self, request, *args, **kwargs):
 		if self.is_valid_signature(request):
-			return HttpResponse(200)
+			response = HttpResponse()
+			payload = json.loads(request.body.decode('utf-8'))
+			# Webhooks can contain multiple events
+			for event in payload['events']:
+				self.process(event, response)
+			return response
 		else:
 			return HttpResponse(498)
 
-	def get(self, request, *args, **kwargs):
-		return HttpResponse('Available')
+	def process(self, event, response):
+		response.write("Processing event {}\n".format(event['id']))
+		if event['resource_type'] == 'mandates':
+			return self.process_mandates(event, response)
+		else:
+			response.write("Don't know how to process an event with \
+				resource_type {}\n".format(event['resource_type']))
+			return response
+
+	def process_mandates(self, event, response):
+		if event['action'] == 'cancelled':
+			response.write("Mandate {} has been \
+				cancelled\n".format(event['links']['mandate']))
+		else:
+			response.write("Don't know how to process an event with \
+				resource_type {}\n".format(event['resource_type']))
+			return response
